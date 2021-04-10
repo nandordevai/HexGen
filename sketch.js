@@ -1,3 +1,5 @@
+// 3165, 24282
+
 const sketch = new p5((p) => {
     const size = 25;
     const rowHeight = Math.cos(Math.PI / 6) * size;
@@ -39,25 +41,33 @@ const sketch = new p5((p) => {
             const h = hexes[y][x];
             h.raise();
         }
+        removeLakes();
         hexes.forEach(row => row.forEach(hex => hex.draw()));
+        console.log(hexes[1][19].neighbours().map(_ => [_.x, _.y]));
     };
 
-    // p.draw = () => {
-    //     hexes.forEach(row => row.forEach(hex => hex.elevation = 0));
-    //     p.background(0, 0, 100, 1);
-    //     for (let i = 0; i < elevation; i++) {
-    //         let x;
-    //         do {
-    //             x = Math.floor(p.randomGaussian(columns / 2, columns / 2 - 15));
-    //         } while (x < 1 || x > columns - 2);
-    //         let y;
-    //         do {
-    //             y = Math.floor(p.randomGaussian(rows / 2, rows / 2 - 8));
-    //         } while (y < 1 || y > rows - 2);
-    //         hexes[y][x].raise();
-    //     }
-    //     hexes.forEach(row => row.forEach(hex => hex.draw()));
-    // };
+    addToOcean = (hex) => {
+        if (hex.isOcean !== null) return;
+        hex.isOcean = true;
+        hex.neighbours()
+            .filter(_ => _.isOcean === null)
+            .forEach((neighbour) => {
+                if (neighbour.elevation < 1) {
+                    addToOcean(neighbour);
+                } else {
+                    neighbour.isOcean = false;
+                }
+            });
+    };
+
+    removeLakes = () => {
+        addToOcean(hexes[0][0]);
+        hexes.forEach(row => row.forEach((hex) => {
+            if (!hex.isOcean && hex.elevation < 1) {
+                hex.raiseTo(1);
+            }
+        }));
+    };
 
     getKeyPoints = () => {
         const keyPoints = [];
@@ -111,8 +121,59 @@ const sketch = new p5((p) => {
         constructor(x, y, elevation = 0) {
             this.x = x;
             this.y = y;
+            this.isOcean = null;
             this.elevation = elevation;
             this.setFillColor();
+        }
+
+        neighbours() {
+            const neighbours = [];
+            // above
+            if (this.y > 0) {
+                neighbours.push(hexes[this.y - 1][this.x]);
+            }
+            // beyond
+            if (this.y < rows - 1) {
+                neighbours.push(hexes[this.y + 1][this.x]);
+            }
+            if (this.x % 2) {
+                // odd row, up is y - 1, down is y
+                // up left
+                if (this.y > 0 && this.x > 1) {
+                    neighbours.push(hexes[this.y - 1][this.x - 1]);
+                }
+                // up right
+                if (this.y > 0 && this.x < columns - 1) {
+                    neighbours.push(hexes[this.y - 1][this.x + 1]);
+                }
+                // down left
+                if (this.y < rows - 1 && this.x > 0) {
+                    neighbours.push(hexes[this.y][this.x - 1]);
+                }
+                // down right
+                if (this.y < rows - 1 && this.x < columns - 1) {
+                    neighbours.push(hexes[this.y][this.x + 1]);
+                }
+            } else {
+                // even row, up is y, down is y + 1
+                // up left
+                if (this.x > 1) {
+                    neighbours.push(hexes[this.y][this.x - 1]);
+                }
+                // up right
+                if (this.x < columns - 1) {
+                    neighbours.push(hexes[this.y][this.x + 1]);
+                }
+                // down left
+                if (this.y < rows - 2 && this.x > 0) {
+                    neighbours.push(hexes[this.y + 1][this.x - 1]);
+                }
+                // down right
+                if (this.y < rows - 2 && this.x < columns - 1) {
+                    neighbours.push(hexes[this.y + 1][this.x + 1]);
+                }
+            }
+            return neighbours;
         }
 
         setFillColor() {
@@ -132,6 +193,11 @@ const sketch = new p5((p) => {
             } else if (this.elevation < 4) {
                 this.elevation += 0.2 * (1 / (this.elevation + 1));
             }
+            this.setFillColor();
+        }
+
+        raiseTo(elevation) {
+            this.elevation = elevation;
             this.setFillColor();
         }
 
