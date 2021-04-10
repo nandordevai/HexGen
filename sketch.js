@@ -1,7 +1,3 @@
-function randint(i) {
-    return Math.floor(Math.random() * (i + 1));
-}
-
 const sketch = new p5((p) => {
     const size = 25;
     const rowHeight = Math.cos(Math.PI / 6) * size;
@@ -12,6 +8,7 @@ const sketch = new p5((p) => {
     const hexes = [];
 
     p.setup = () => {
+        p.randomSeed(setSeed());
         p.createCanvas(width, height);
         p.colorMode(p.HSB, 360, 100, 100);
         for (let y = 0; y < rows; y++) {
@@ -29,13 +26,26 @@ const sketch = new p5((p) => {
         let y = Math.floor(randint(rows / 2) + rows / 4) - 1;
         for (let i = 0; i < 14000; i++) {
             x += randint(2) - 1;
-            if (x >= columns || x < 0) x = Math.floor(randint(columns / 2) + columns / 4) - 1;
+            if (x >= columns || x < 1) x = Math.floor(randint(columns / 2) + columns / 4) - 1;
             y += randint(2) - 1;
-            if (y >= rows || y < 0) y = Math.floor(randint(rows / 2) + rows / 4) - 1;
+            if (y >= rows || y < 1) y = Math.floor(randint(rows / 2) + rows / 4) - 1;
             const h = hexes[y][x];
             h.raise();
         }
         hexes.forEach(row => row.forEach(hex => hex.draw()));
+    };
+
+    randint = (i) => {
+        return Math.floor(p.random(i + 1));
+    };
+
+    setSeed = () => {
+        let seed = localStorage.getItem('hexgenSeed');
+        if (seed === null) {
+            seed = randint(10000);
+            localStorage.setItem('hexgenSeed', seed);
+        }
+        return seed;
     };
 
     class Hex {
