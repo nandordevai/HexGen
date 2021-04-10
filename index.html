@@ -12,11 +12,66 @@
         body {
             margin: 30px;
         }
+
+        #controls {
+            background: hsla(0, 0%, 100%, 0.9);
+            border: 1px solid hsla(0, 0%, 0%, 1);
+            display: flex;
+            flex-direction: column;
+            font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+            padding: 20px;
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            width: 300px;
+            z-index: 1;
+        }
+
+        #sketch {
+            z-index: 0;
+        }
+
+        #seed {
+            width: 60px;
+        }
+
+        .row {
+            display: flex;
+            flex-direction: row;
+            height: 30px;
+            line-height: 30px;
+            padding: 5px 0;
+        }
+
+        .row__item {
+            margin: 0 5px;
+        }
+
+        label {
+            text-align: right;
+            width: 80px;
+        }
+
+        input[type=text] {
+            font-size: 14px;
+        }
     </style>
 </head>
 
 <body>
     <div id="sketch"></div>
+    <div id="controls">
+        <div class="row">
+            <label class="row__item" for="seed">Seed</label>
+            <input class="row__item" type="text" name="seed" id="seed">
+            <button class="row__item" id="regenerate-seed">Regenerate</button>
+        </div>
+        <div class="row">
+            <label class="row__item" for="elevation">Elevation</label>
+            <input class="row__item" type="range" name="elevation" id="elevation" min="10000" max="30000">
+            <span class="row__item" id="elevation-label">15000</span>
+        </div>
+    </div>
 </body>
 
 </html>
