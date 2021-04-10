@@ -26,23 +26,49 @@ const sketch = new p5((p) => {
     };
 
     p.draw = () => {
+        const keyPoints = getKeyPoints();
         hexes.forEach(row => row.forEach(hex => hex.elevation = 0));
         p.background(0, 0, 100, 1);
-        let x = Math.floor(randint(columns / 2) + columns / 4) - 1;
-        let y = Math.floor(randint(rows / 2) + rows / 4) - 1;
+        let [x, y] = keyPoints[0];
         for (let i = 0; i < elevation; i++) {
             x += randint(2) - 1;
-            if (x >= columns - 1 || x < 1) {
-                x = Math.floor(randint(columns / 2) + columns / 4) - 1;
-            }
             y += randint(2) - 1;
-            if (y >= rows - 1 || y < 1) {
-                y = Math.floor(randint(rows / 2) + rows / 4) - 1;
+            if ((x >= columns - 2 || x < 1) || (y >= rows - 2 || y < 1)) {
+                [x, y] = p.random(keyPoints);
             }
             const h = hexes[y][x];
             h.raise();
         }
         hexes.forEach(row => row.forEach(hex => hex.draw()));
+    };
+
+    // p.draw = () => {
+    //     hexes.forEach(row => row.forEach(hex => hex.elevation = 0));
+    //     p.background(0, 0, 100, 1);
+    //     for (let i = 0; i < elevation; i++) {
+    //         let x;
+    //         do {
+    //             x = Math.floor(p.randomGaussian(columns / 2, columns / 2 - 15));
+    //         } while (x < 1 || x > columns - 2);
+    //         let y;
+    //         do {
+    //             y = Math.floor(p.randomGaussian(rows / 2, rows / 2 - 8));
+    //         } while (y < 1 || y > rows - 2);
+    //         hexes[y][x].raise();
+    //     }
+    //     hexes.forEach(row => row.forEach(hex => hex.draw()));
+    // };
+
+    getKeyPoints = () => {
+        const keyPoints = [];
+        for (let i = 1; i <= 4; i++) {
+            let x = Math.floor(randint(columns / 2)) + (columns / 2) * (i % 2);
+            let y = Math.floor(randint(rows / 2)) + (rows / 2) * (i % 2);
+            x = Math.min(columns - 2, Math.max(x, 1));
+            y = Math.min(rows - 2, Math.max(y, 1));
+            keyPoints.push([x, y]);
+        }
+        return keyPoints;
     };
 
     loadValues = () => {
@@ -81,16 +107,6 @@ const sketch = new p5((p) => {
         return v;
     };
 
-    // TODO: use getStoredValue instead
-    setSeed = () => {
-        let seed = localStorage.getItem('hexgen-seed');
-        if (seed === null) {
-            seed = randint(10000);
-            localStorage.setItem('hexgen-seed', seed);
-        }
-        return seed;
-    };
-
     class Hex {
         constructor(x, y, elevation = 0) {
             this.x = x;
@@ -111,10 +127,12 @@ const sketch = new p5((p) => {
         }
 
         raise() {
-            if (this.elevation < 4) {
-                this.elevation += 0.1;
-                this.setFillColor();
+            if (this.elevation === 0) {
+                this.elevation += 0.5;
+            } else if (this.elevation < 4) {
+                this.elevation += 0.2 * (1 / (this.elevation + 1));
             }
+            this.setFillColor();
         }
 
         draw() {
@@ -125,7 +143,7 @@ const sketch = new p5((p) => {
             }
             p.push();
             p.translate(sx, sy);
-            p.stroke(0, 0, 30);
+            p.stroke(0, 0, 40);
             p.strokeWeight(.5);
             p.fill(this.color);
             p.beginShape();
