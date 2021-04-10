@@ -1,4 +1,5 @@
 // 3165, 24282
+// 512, 22183
 
 const sketch = new p5((p) => {
     const size = 25;
@@ -31,7 +32,7 @@ const sketch = new p5((p) => {
         const keyPoints = getKeyPoints();
         hexes.forEach(row => row.forEach(hex => hex.elevation = 0));
         p.background(0, 0, 100, 1);
-        let [x, y] = keyPoints[0];
+        let [x, y] = p.random(keyPoints);
         for (let i = 0; i < elevation; i++) {
             x += randint(2) - 1;
             y += randint(2) - 1;
@@ -42,8 +43,7 @@ const sketch = new p5((p) => {
             h.raise();
         }
         removeLakes();
-        hexes.forEach(row => row.forEach(hex => hex.draw()));
-        console.log(hexes[1][19].neighbours().map(_ => [_.x, _.y]));
+        hexes.forEach(row => row.forEach(hex => { hex.draw(); }));
     };
 
     addToOcean = (hex) => {
