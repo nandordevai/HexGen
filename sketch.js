@@ -1,5 +1,5 @@
 function randint(i) {
-    return Math.floor(Math.random() * i);
+    return Math.floor(Math.random() * (i + 1));
 }
 
 const sketch = new p5((p) => {
@@ -25,13 +25,13 @@ const sketch = new p5((p) => {
 
     p.draw = () => {
         p.noLoop();
-        let x = Math.floor(randint(columns / 2) + columns / 4);
-        let y = Math.floor(randint(rows / 2) + rows / 4);
-        for (let i = 0; i < 20000; i++) {
+        let x = Math.floor(randint(columns / 2) + columns / 4) - 1;
+        let y = Math.floor(randint(rows / 2) + rows / 4) - 1;
+        for (let i = 0; i < 14000; i++) {
             x += randint(2) - 1;
-            if (x >= columns || x < 0) x = Math.floor(randint(columns / 2) + columns / 2);
+            if (x >= columns || x < 0) x = Math.floor(randint(columns / 2) + columns / 4) - 1;
             y += randint(2) - 1;
-            if (y >= rows || y < 0) y = Math.floor(randint(rows / 2) + rows / 2);
+            if (y >= rows || y < 0) y = Math.floor(randint(rows / 2) + rows / 4) - 1;
             const h = hexes[y][x];
             h.raise();
         }
