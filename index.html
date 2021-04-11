@@ -10,7 +10,7 @@
     <script src="sketch.js"></script>
     <style>
         body {
-            margin: 30px;
+            margin: 20px;
         }
 
         #controls {
@@ -19,11 +19,12 @@
             display: flex;
             flex-direction: column;
             font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
-            padding: 20px;
+            font-size: 12px;
+            padding: 10px;
             position: absolute;
             top: 40px;
             right: 40px;
-            width: 300px;
+            width: 250px;
             z-index: 1;
         }
 
@@ -36,6 +37,7 @@
         }
 
         .row {
+            align-items: center;
             display: flex;
             flex-direction: row;
             height: 30px;
@@ -49,11 +51,19 @@
 
         label {
             text-align: right;
-            width: 80px;
+            width: 60px;
         }
 
         input[type=text] {
-            font-size: 14px;
+            font-size: 11px;
+            height: 20px;
+        }
+
+        button {
+            -webkit-appearance: none;
+            background-color: hsla(0, 0%, 90%, 1);
+            border: 1px solid hsla(0, 0%, 60%, 1);
+            height: 28px;
         }
     </style>
 </head>
@@ -68,7 +78,7 @@
         </div>
         <div class="row">
             <label class="row__item" for="elevation">Elevation</label>
-            <input class="row__item" type="range" name="elevation" id="elevation" min="10000" max="30000">
+            <input class="row__item" type="range" name="elevation" id="elevation" min="20000" max="100000">
             <span class="row__item" id="elevation-label">15000</span>
         </div>
     </div>

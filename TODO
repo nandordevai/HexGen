@@ -1,0 +1,31 @@
+fix regenerate/redraw() problem
+
+create a save format
+
+make a backend for saving and loading data
+
+add wind (make it editable)
+
+add precipitation based on wind, distance to sea and altitude (make it editable?)
+
+set temperatures based on distance to equator (make the equator position editable)
+
+set biome based on precipitation and temperature
+
+add rivers and lakes
+
+add cities
+
+add roads
+
+generate city names
+
+add countries
+
+generate country names
+
+generate and position names for mountains, lakes, rivers, seas, plains, deserts, forests
+
+zoom option: country
+
+zoom option: part of country/hex?

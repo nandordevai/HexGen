@@ -1,14 +1,18 @@
 // 3165, 24282
 // 512, 22183
+// 3458, 84592
+// 6831, 84592
 
 const sketch = new p5((p) => {
-    const size = 25;
+    const size = 12.5;
     const rowHeight = Math.cos(Math.PI / 6) * size;
-    const width = 2560;
-    const height = 1440;
-    const rows = 30;
-    const columns = 60;
+    const width = 1920;
+    const height = 1080;
+    const rows = 46;
+    const columns = 100;
     const hexes = [];
+    const keyPointsNum = 8;
+    let startKeyPoint;
     let elevation; // TODO: find better name
     let seed;
 
@@ -26,13 +30,14 @@ const sketch = new p5((p) => {
             hexes.push(row);
         }
         setHandlers();
+        startKeyPoint = Math.floor(p.random(keyPointsNum));
     };
 
     p.draw = () => {
         const keyPoints = getKeyPoints();
         hexes.forEach(row => row.forEach(hex => hex.elevation = 0));
         p.background(0, 0, 100, 1);
-        let [x, y] = p.random(keyPoints);
+        let [x, y] = keyPoints[startKeyPoint];
         for (let i = 0; i < elevation; i++) {
             x += randint(2) - 1;
             y += randint(2) - 1;
@@ -61,7 +66,9 @@ const sketch = new p5((p) => {
     };
 
     removeLakes = () => {
-        addToOcean(hexes[0][0]);
+        if (hexes[0][0].isOcean === null) {
+            addToOcean(hexes[0][0]);
+        }
         hexes.forEach(row => row.forEach((hex) => {
             if (!hex.isOcean && hex.elevation < 1) {
                 hex.raiseTo(1);
@@ -71,7 +78,7 @@ const sketch = new p5((p) => {
 
     getKeyPoints = () => {
         const keyPoints = [];
-        for (let i = 1; i <= 4; i++) {
+        for (let i = 1; i <= keyPointsNum; i++) {
             let x = Math.floor(randint(columns / 2)) + (columns / 2) * (i % 2);
             let y = Math.floor(randint(rows / 2)) + (rows / 2) * (i % 2);
             x = Math.min(columns - 2, Math.max(x, 1));
@@ -218,15 +225,15 @@ const sketch = new p5((p) => {
                 p.vertex(v.x, v.y);
             }
             p.endShape(p.CLOSE);
-            p.noStroke();
-            if (this.elevation === 3) {
-                p.fill(0, 0, 100);
-            } else {
-                p.fill(0, 0, 0);
-            }
-            p.textFont('Helvetica Neue Light', 10);
-            p.textStyle(p5.NORMAL);
-            p.text(`${this.x}, ${this.y}`, -13, -6);
+            // p.noStroke();
+            // if (this.elevation === 3) {
+            //     p.fill(0, 0, 100);
+            // } else {
+            //     p.fill(0, 0, 0);
+            // }
+            // p.textFont('Helvetica Neue Light', 10);
+            // p.textStyle(p5.NORMAL);
+            // p.text(`${this.x}, ${this.y}`, -13, -6);
             p.pop();
         }
     }
