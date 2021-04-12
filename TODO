@@ -1,4 +1,4 @@
-fix regenerate/redraw() problem
+fix regenerate/redraw() problem: might a p5 issue
 
 create a save format
 
@@ -11,6 +11,15 @@ add precipitation based on wind, distance to sea and altitude (make it editable?
 set temperatures based on distance to equator (make the equator position editable)
 
 set biome based on precipitation and temperature
+- tundra -> grass
+- boreal forest (taiga) -> coniferous forest
+- temperate rainforest -> forest
+- temperate seasonal forest -> forest
+- woodland/shrubland -> forest?
+- temperate grassland/cold desert -> grassland
+- tropical rainforest -> rainforest
+- tropical seasonal forest/savanna -> forest
+- subtropical desert -> desert
 
 add rivers and lakes
 

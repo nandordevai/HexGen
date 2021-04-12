@@ -1,240 +1,176 @@
-// 3165, 24282
-// 512, 22183
-// 3458, 84592
-// 6831, 84592
+import { Hex } from './hex.js';
 
-const sketch = new p5((p) => {
-    const size = 12.5;
-    const rowHeight = Math.cos(Math.PI / 6) * size;
-    const width = 1920;
-    const height = 1080;
-    const rows = 46;
-    const columns = 100;
-    const hexes = [];
-    const keyPointsNum = 8;
-    let startKeyPoint;
-    let elevation; // TODO: find better name
-    let seed;
+window.HEXSIZE = 12.5;
+window.ROWHEIGHT = Math.cos(Math.PI / 6) * HEXSIZE;
 
-    p.setup = () => {
-        p.noLoop();
-        loadValues();
-        p.randomSeed(seed);
-        p.createCanvas(width, height);
-        p.colorMode(p.HSB, 360, 100, 100);
-        for (let y = 0; y < rows; y++) {
-            const row = [];
-            for (let x = 0; x < columns; x++) {
-                row.push(new Hex(x, y));
-            }
-            hexes.push(row);
+const width = 1920;
+const height = 1080;
+const rows = 46;
+const columns = 100;
+const hexes = [];
+const keyPointsNum = 8;
+let keyPoints = [];
+let startKeyPoint;
+let globalElevation;
+let seed;
+
+window.setup = () => {
+    noLoop();
+    createCanvas(width, height);
+    colorMode(HSB, 360, 100, 100);
+    for (let y = 0; y < rows; y++) {
+        const row = [];
+        for (let x = 0; x < columns; x++) {
+            row.push(new Hex(x, y));
         }
-        setHandlers();
-        startKeyPoint = Math.floor(p.random(keyPointsNum));
-    };
+        hexes.push(row);
+    }
+    setDefaults();
+    setHandlers();
+};
 
-    p.draw = () => {
-        const keyPoints = getKeyPoints();
-        hexes.forEach(row => row.forEach(hex => hex.elevation = 0));
-        p.background(0, 0, 100, 1);
-        let [x, y] = keyPoints[startKeyPoint];
-        for (let i = 0; i < elevation; i++) {
-            x += randint(2) - 1;
-            y += randint(2) - 1;
-            if ((x >= columns - 2 || x < 1) || (y >= rows - 2 || y < 1)) {
-                [x, y] = p.random(keyPoints);
-            }
-            const h = hexes[y][x];
-            h.raise();
+window.draw = () => {
+    hexes.forEach(row => row.forEach(hex => { hex.reset(); }));
+    background(0, 0, 100, 1);
+    let [x, y] = keyPoints[startKeyPoint];
+    for (let i = 0; i < globalElevation; i++) {
+        x += randint(2) - 1;
+        y += randint(2) - 1;
+        if ((x >= columns - 2 || x < 1) || (y >= rows - 2 || y < 1)) {
+            [x, y] = random(keyPoints);
         }
-        removeLakes();
-        hexes.forEach(row => row.forEach(hex => { hex.draw(); }));
-    };
+        const h = hexes[y][x];
+        h.raise();
+    }
+    removeLakes();
+    hexes.forEach(row => row.forEach(hex => { hex.draw(); }));
+    console.log(hexes.map(row => row.map(hex => hex.elevation)));
+};
 
-    addToOcean = (hex) => {
-        if (hex.isOcean !== null) return;
-        hex.isOcean = true;
-        hex.neighbours()
-            .filter(_ => _.isOcean === null)
-            .forEach((neighbour) => {
-                if (neighbour.elevation < 1) {
-                    addToOcean(neighbour);
-                } else {
-                    neighbour.isOcean = false;
-                }
-            });
-    };
+function setDefaults() {
+    loadValues();
+    initRandom();
+};
 
-    removeLakes = () => {
-        if (hexes[0][0].isOcean === null) {
-            addToOcean(hexes[0][0]);
+function initRandom() {
+    randomSeed(seed);
+    setKeyPoints();
+    startKeyPoint = Math.floor(random(keyPointsNum));
+};
+
+function getHexNeighbours(hex) {
+    let top = null;
+    let topright = null;
+    let bottomright = null;
+    let bottom = null;
+    let bottomleft = null;
+    let topleft = null;
+    if (hex.y > 0) {
+        top = hexes[hex.y - 1][hex.x];
+    }
+    if (hex.y < rows - 1) {
+        bottom = hexes[hex.y + 1][hex.x];
+    }
+    if (hex.x % 2) {
+        if (hex.y > 0 && hex.x > 1) {
+            topleft = hexes[hex.y - 1][hex.x - 1];
         }
-        hexes.forEach(row => row.forEach((hex) => {
-            if (!hex.isOcean && hex.elevation < 1) {
-                hex.raiseTo(1);
-            }
-        }));
-    };
-
-    getKeyPoints = () => {
-        const keyPoints = [];
-        for (let i = 1; i <= keyPointsNum; i++) {
-            let x = Math.floor(randint(columns / 2)) + (columns / 2) * (i % 2);
-            let y = Math.floor(randint(rows / 2)) + (rows / 2) * (i % 2);
-            x = Math.min(columns - 2, Math.max(x, 1));
-            y = Math.min(rows - 2, Math.max(y, 1));
-            keyPoints.push([x, y]);
+        if (hex.y > 0 && hex.x < columns - 1) {
+            topright = hexes[hex.y - 1][hex.x + 1];
         }
-        return keyPoints;
-    };
-
-    loadValues = () => {
-        elevation = getStoredValue('hexgen-elevation', 15000);
-        document.querySelector('#elevation-label').innerHTML = elevation;
-        seed = getStoredValue('hexgen-seed', randint(10000));
-        document.querySelector('#seed').value = seed;
-    };
-
-    setHandlers = () => {
-        document.querySelector('#elevation').addEventListener('input', (e) => {
-            elevation = e.target.value;
-            document.querySelector('#elevation-label').innerHTML = e.target.value;
-            localStorage.setItem('hexgen-elevation', e.target.value);
-            p.redraw();
-        });
-
-        document.querySelector('#regenerate-seed').addEventListener('click', () => {
-            const newSeed = randint(10000);
-            localStorage.setItem('hexgen-seed', newSeed);
-            document.querySelector('#seed').value = newSeed;
-            p.redraw();
-        });
-    };
-
-    randint = (i) => {
-        return Math.floor(p.random(i + 1));
-    };
-
-    getStoredValue = (key, defaultValue) => {
-        let v = localStorage.getItem(key);
-        if (v === null) {
-            v = defaultValue;
-            localStorage.setItem(key, defaultValue);
+        if (hex.y < rows - 1 && hex.x > 0) {
+            bottomleft = hexes[hex.y][hex.x - 1];
         }
-        return v;
-    };
-
-    class Hex {
-        constructor(x, y, elevation = 0) {
-            this.x = x;
-            this.y = y;
-            this.isOcean = null;
-            this.elevation = elevation;
-            this.setFillColor();
+        if (hex.y < rows - 1 && hex.x < columns - 1) {
+            bottomright = hexes[hex.y][hex.x + 1];
         }
-
-        neighbours() {
-            const neighbours = [];
-            // above
-            if (this.y > 0) {
-                neighbours.push(hexes[this.y - 1][this.x]);
-            }
-            // beyond
-            if (this.y < rows - 1) {
-                neighbours.push(hexes[this.y + 1][this.x]);
-            }
-            if (this.x % 2) {
-                // odd row, up is y - 1, down is y
-                // up left
-                if (this.y > 0 && this.x > 1) {
-                    neighbours.push(hexes[this.y - 1][this.x - 1]);
-                }
-                // up right
-                if (this.y > 0 && this.x < columns - 1) {
-                    neighbours.push(hexes[this.y - 1][this.x + 1]);
-                }
-                // down left
-                if (this.y < rows - 1 && this.x > 0) {
-                    neighbours.push(hexes[this.y][this.x - 1]);
-                }
-                // down right
-                if (this.y < rows - 1 && this.x < columns - 1) {
-                    neighbours.push(hexes[this.y][this.x + 1]);
-                }
-            } else {
-                // even row, up is y, down is y + 1
-                // up left
-                if (this.x > 1) {
-                    neighbours.push(hexes[this.y][this.x - 1]);
-                }
-                // up right
-                if (this.x < columns - 1) {
-                    neighbours.push(hexes[this.y][this.x + 1]);
-                }
-                // down left
-                if (this.y < rows - 2 && this.x > 0) {
-                    neighbours.push(hexes[this.y + 1][this.x - 1]);
-                }
-                // down right
-                if (this.y < rows - 2 && this.x < columns - 1) {
-                    neighbours.push(hexes[this.y + 1][this.x + 1]);
-                }
-            }
-            return neighbours;
+    } else {
+        if (hex.x > 1) {
+            topleft = hexes[hex.y][hex.x - 1];
         }
-
-        setFillColor() {
-            const colors = {
-                sea: p.color(220, 50, 100),
-                plains: p.color(120, 40, 60),
-                hills: p.color(30, 40, 55),
-                mountains: p.color(30, 40, 35),
-                highMountains: p.color(0, 0, 100),
-            };
-            this.color = colors[Object.keys(colors)[Math.floor(this.elevation)]];
+        if (hex.x < columns - 1) {
+            topright = hexes[hex.y][hex.x + 1];
         }
-
-        raise() {
-            if (this.elevation === 0) {
-                this.elevation += 0.5;
-            } else if (this.elevation < 4) {
-                this.elevation += 0.2 * (1 / (this.elevation + 1));
-            }
-            this.setFillColor();
+        if (hex.y < rows - 2 && hex.x > 0) {
+            bottomleft = hexes[hex.y + 1][hex.x - 1];
         }
-
-        raiseTo(elevation) {
-            this.elevation = elevation;
-            this.setFillColor();
-        }
-
-        draw() {
-            const sx = ((1.5 * this.x) + 1) * size;
-            let sy = (this.y + .5) * rowHeight * 2;
-            if (this.x % 2 === 0) {
-                sy += rowHeight;
-            }
-            p.push();
-            p.translate(sx, sy);
-            p.stroke(0, 0, 40);
-            p.strokeWeight(.5);
-            p.fill(this.color);
-            p.beginShape();
-            for (let i = 0; i < 6; i++) {
-                const v = new p5.Vector.fromAngle(i * (Math.PI / 3), size);
-                p.vertex(v.x, v.y);
-            }
-            p.endShape(p.CLOSE);
-            // p.noStroke();
-            // if (this.elevation === 3) {
-            //     p.fill(0, 0, 100);
-            // } else {
-            //     p.fill(0, 0, 0);
-            // }
-            // p.textFont('Helvetica Neue Light', 10);
-            // p.textStyle(p5.NORMAL);
-            // p.text(`${this.x}, ${this.y}`, -13, -6);
-            p.pop();
+        if (hex.y < rows - 2 && hex.x < columns - 1) {
+            bottomright = hexes[hex.y + 1][hex.x + 1];
         }
     }
-}, 'sketch');
+    return [top, topright, bottomright, bottom, bottomleft, topleft];
+}
+
+function addToOcean(hex) {
+    if (hex.isOcean !== null) return;
+    hex.isOcean = true;
+    getHexNeighbours(hex)
+        .filter(_ => _ !== null)
+        .filter(_ => _.isOcean === null)
+        .forEach((neighbour) => {
+            if (neighbour.elevation < 1) {
+                addToOcean(neighbour);
+            } else {
+                neighbour.isOcean = false;
+            }
+        });
+};
+
+function removeLakes() {
+    if (hexes[0][0].isOcean === null) {
+        addToOcean(hexes[0][0]);
+    }
+    hexes.forEach(row => row.forEach((hex) => {
+        if (!hex.isOcean && hex.elevation < 1) {
+            hex.raiseTo(1);
+        }
+    }));
+};
+
+function setKeyPoints() {
+    for (let i = 1; i <= keyPointsNum; i++) {
+        let x = Math.floor(randint(columns / 2)) + (columns / 2) * (i % 2);
+        let y = Math.floor(randint(rows / 2)) + (rows / 2) * (i % 2);
+        x = Math.min(columns - 2, Math.max(x, 1));
+        y = Math.min(rows - 2, Math.max(y, 1));
+        keyPoints.push([x, y]);
+    }
+};
+
+function loadValues() {
+    globalElevation = getStoredValue('hexgen-elevation', 15000);
+    document.querySelector('#elevation-label').innerHTML = globalElevation;
+    seed = getStoredValue('hexgen-seed', randint(10000));
+    document.querySelector('#seed').value = seed;
+};
+
+function setHandlers() {
+    document.querySelector('#elevation').addEventListener('input', (e) => {
+        globalElevation = e.target.value;
+        document.querySelector('#elevation-label').innerHTML = e.target.value;
+        localStorage.setItem('hexgen-elevation', e.target.value);
+        initRandom();
+        redraw();
+    });
+
+    document.querySelector('#regenerate-seed').addEventListener('click', () => {
+        const newSeed = randint(10000);
+        localStorage.setItem('hexgen-seed', newSeed);
+        document.querySelector('#seed').value = newSeed;
+        setDefaults();
+        redraw();
+    });
+};
+
+function randint(i) {
+    return Math.floor(random(i + 1));
+};
+
+function getStoredValue(key, defaultValue) {
+    let v = localStorage.getItem(key);
+    if (v === null) {
+        v = defaultValue;
+        localStorage.setItem(key, defaultValue);
+    }
+    return v;
+};
