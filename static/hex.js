@@ -3,6 +3,8 @@ export class Hex {
         this.x = x;
         this.y = y;
         this.isOcean = null;
+        this.biome = null;
+        this.precipitation = null;
         this.setElevationTo(elevation);
     }
 
@@ -12,6 +14,10 @@ export class Hex {
     }
 
     setFillColor() {
+        if (this.biome === 'desert') {
+            this.color = color(50, 30, 80);
+            return;
+        }
         const colors = {
             sea: color(220, 50, 100),
             plains: color(120, 40, 60),
@@ -20,6 +26,15 @@ export class Hex {
             highMountains: color(0, 0, 100),
         };
         this.color = colors[Object.keys(colors)[Math.floor(this.elevation)]];
+    }
+
+    setPrecipitation(precipitation) {
+        this.precipitation = precipitation;
+    }
+
+    setBiome(biome) {
+        this.biome = biome;
+        this.setFillColor();
     }
 
     raise() {

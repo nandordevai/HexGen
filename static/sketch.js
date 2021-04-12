@@ -9,6 +9,9 @@ const rows = 46;
 const columns = 100;
 const hexes = [];
 const keyPointsNum = 8;
+// wind direction to:
+// 0 = north, 1 = northeast, 2 = southeast, 3 = south, 4 = southwest, 5 = northwest
+const wind = 5;
 let keyPoints = [];
 let startKeyPoint;
 let globalElevation;
@@ -58,8 +61,59 @@ window.draw = () => {
         h.raise();
     }
     removeLakes();
+    calculatePrecipitation();
     hexes.forEach(row => row.forEach(hex => { hex.draw(); }));
 };
+
+function calculatePrecipitation2(startAt, endAt) {
+    let incrementor = [];
+    if (startAt[0] === endAt[0]) {
+        incrementor = [0, 1];
+    } else {
+        incrementor = [1, 0];
+    }
+    let position = startAt;
+    while (position[0] <= endAt[0] && position[1] <= endAt[1]) {
+        position[0] += incrementor[0];
+        position[1] += incrementor[1];
+    }
+}
+
+function calculatePrecipitation() {
+    const defaultPrecipitation = 55;
+
+    const calculateArea = (hex) => {
+        let prevElevation = hex.elevation;
+        let precipitation = defaultPrecipitation;
+        while (hex.x >= 0 && hex.y >= 0) {
+            hex.setPrecipitation(precipitation);
+            hex = getHexNeighbours(hex)[wind];
+            if (hex === null) break;
+            if (hex.elevation < 1) {
+                // reset on sea
+                precipitation = defaultPrecipitation;
+            } else if (prevElevation < hex.elevation) {
+                // decrease precipitation on upward slopes
+                precipitation = Math.max(0, precipitation - Math.floor(hex.elevation));
+            } else {
+                if (precipitation === 0) {
+                    hex.setBiome('desert');
+                }
+            }
+            prevElevation = hex.elevation;
+        }
+    };
+
+    for (let x = columns - 1; x > 0; x--) {
+        let hex = hexes[rows - 1][x];
+        calculateArea(hex);
+    }
+
+    for (let y = rows - 1; y > 0; y--) {
+        let hex = hexes[y][columns - 1];
+        calculateArea(hex);
+    }
+}
 
 function setDefaults() {
     loadValues();
