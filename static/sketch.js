@@ -29,6 +29,21 @@ window.setup = () => {
     setHandlers();
 };
 
+function loadSaved() {
+    load(7665, 59198).then((data) => {
+        background(0, 0, 100, 1);
+        data.forEach((row, y) => {
+            row.forEach((hex, x) => {
+                hexes[y][x].setElevationTo(hex[0]);
+            });
+        });
+        hexes.forEach(row => row.forEach(hex => { hex.draw(); }));
+    });
+    document.querySelector('#seed').value = 7665;
+    document.querySelector('#elevation').value = 59198;
+    document.querySelector('#elevation-input').value = 59198;
+};
+
 window.draw = () => {
     hexes.forEach(row => row.forEach(hex => { hex.reset(); }));
     background(0, 0, 100, 1);
@@ -44,7 +59,6 @@ window.draw = () => {
     }
     removeLakes();
     hexes.forEach(row => row.forEach(hex => { hex.draw(); }));
-    console.log(hexes.map(row => row.map(hex => hex.elevation)));
 };
 
 function setDefaults() {
@@ -122,7 +136,7 @@ function removeLakes() {
     }
     hexes.forEach(row => row.forEach((hex) => {
         if (!hex.isOcean && hex.elevation < 1) {
-            hex.raiseTo(1);
+            hex.setElevationTo(1);
         }
     }));
 };
@@ -139,7 +153,7 @@ function setKeyPoints() {
 
 function loadValues() {
     globalElevation = getStoredValue('hexgen-elevation', 15000);
-    document.querySelector('#elevation-label').innerHTML = globalElevation;
+    document.querySelector('#elevation-input').value = globalElevation;
     seed = getStoredValue('hexgen-seed', randint(10000));
     document.querySelector('#seed').value = seed;
 };
@@ -147,7 +161,7 @@ function loadValues() {
 function setHandlers() {
     document.querySelector('#elevation').addEventListener('input', (e) => {
         globalElevation = e.target.value;
-        document.querySelector('#elevation-label').innerHTML = e.target.value;
+        document.querySelector('#elevation-input').value = e.target.value;
         localStorage.setItem('hexgen-elevation', e.target.value);
         initRandom();
         redraw();
@@ -159,6 +173,28 @@ function setHandlers() {
         document.querySelector('#seed').value = newSeed;
         setDefaults();
         redraw();
+    });
+
+    document.querySelector('#seed').addEventListener('change', (e) => {
+        localStorage.setItem('hexgen-seed', e.target.value);
+        document.querySelector('#seed').value = e.target.value;
+        setDefaults();
+        redraw();
+    });
+
+    document.querySelector('#elevation-input').addEventListener('change', (e) => {
+        localStorage.setItem('hexgen-elevation', e.target.value);
+        document.querySelector('#elevation').value = e.target.value;
+        setDefaults();
+        redraw();
+    });
+
+    document.querySelector('#load-default').addEventListener('click', () => {
+        loadSaved();
+    });
+
+    document.querySelector('#save').addEventListener('click', () => {
+        save();
     });
 };
 
@@ -174,3 +210,24 @@ function getStoredValue(key, defaultValue) {
     }
     return v;
 };
+
+function save() {
+    const mapData = {
+        seed,
+        elevation: globalElevation,
+        data: hexes.map(row => row.map(hex => [hex.elevation])),
+    };
+    fetch('http://localhost:5000/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mapData),
+    });
+}
+
+async function load(seed, elevation) {
+    const response = await fetch(`/load/${seed}/${elevation}`);
+    const json = await response.json();
+    return json;
+}

@@ -9,3 +9,4 @@ Good seed/elevation combinations (some of them might be outdated):
 3458, 84592
 6831, 84592
 7665, 59198
+6635, ?

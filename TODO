@@ -1,10 +1,8 @@
-fix regenerate/redraw() problem: might a p5 issue
-
-create a save format
-
-make a backend for saving and loading data
+fix regenerate/redraw() problem: might be a p5 issue, will fix later
 
 add wind (make it editable)
+
+add an option to browse and load saved maps
 
 add precipitation based on wind, distance to sea and altitude (make it editable?)
 

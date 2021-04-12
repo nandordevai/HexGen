@@ -3,12 +3,11 @@ export class Hex {
         this.x = x;
         this.y = y;
         this.isOcean = null;
-        this.elevation = elevation;
-        this.setFillColor();
+        this.setElevationTo(elevation);
     }
 
     reset() {
-        this.elevation = 0;
+        this.setElevationTo(0);
         this.isOcean = null;
     }
 
@@ -32,7 +31,7 @@ export class Hex {
         this.setFillColor();
     }
 
-    raiseTo(elevation) {
+    setElevationTo(elevation) {
         this.elevation = elevation;
         this.setFillColor();
     }
@@ -62,7 +61,19 @@ export class Hex {
         // }
         // textFont('Helvetica Neue Light', 10);
         // textStyle(p5.NORMAL);
-        // text(`${this.x}, ${this.y}`, -13, -6);
+        // let biome;
+        // switch (Math.floor(this.elevation)) {
+        //     case 2:
+        //         biome = '🌳';
+        //         break;
+        //     case 3:
+        //         biome = '🌲';
+        //         break;
+        //     default:
+        //         biome = '';
+        //         break;
+        // }
+        // text(biome, -7, 3);
         pop();
     }
 }

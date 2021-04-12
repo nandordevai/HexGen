@@ -32,8 +32,9 @@
             z-index: 0;
         }
 
-        #seed {
-            width: 60px;
+        #seed,
+        #elevation-input {
+            width: 50px;
         }
 
         .row {
@@ -79,7 +80,11 @@
         <div class="row">
             <label class="row__item" for="elevation">Elevation</label>
             <input class="row__item" type="range" name="elevation" id="elevation" min="20000" max="100000">
-            <span class="row__item" id="elevation-label">15000</span>
+            <input class="row__item" type="text" name="elevation-input" id="elevation-input" value="15000">
+        </div>
+        <div class="row">
+            <button class="row__item" id="load-default">Load default</button>
+            <button class="row__item" id="save">Save</button>
         </div>
     </div>
 </body>
