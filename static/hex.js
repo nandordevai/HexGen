@@ -46,6 +46,13 @@ export class Hex {
         this.setFillColor();
     }
 
+    lower() {
+        if (this.elevation > 0.5) {
+            this.elevation -= 0.5;
+        }
+        this.setFillColor();
+    }
+
     setElevationTo(elevation) {
         this.elevation = elevation;
         this.setFillColor();
@@ -78,6 +85,9 @@ export class Hex {
         // textStyle(p5.NORMAL);
         // let biome;
         // switch (Math.floor(this.elevation)) {
+        //     case 1:
+        //         biome = '🌱';
+        //         break;
         //     case 2:
         //         biome = '🌳';
         //         break;

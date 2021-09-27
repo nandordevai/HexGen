@@ -8,13 +8,19 @@ const height = 1080;
 const rows = 46;
 const columns = 100;
 const hexes = [];
-const keyPointsNum = 8;
-// wind direction to:
+const keyPointsUpNum = 8;
+const keyPointsDownNum = 4;
+const defaultSeed = 7665;
+const defaultElevationUp = 59198;
+const defaultElevationDown = 6500;
+// wind direction (to):
 // 0 = north, 1 = northeast, 2 = southeast, 3 = south, 4 = southwest, 5 = northwest
-const wind = 5;
-let keyPoints = [];
-let startKeyPoint;
-let globalElevation;
+let keyPointsUp = [];
+let keyPointsDown = [];
+let startKeyPointUp;
+let startKeyPointDown;
+let globalElevationUp;
+let globalElevationDown;
 let seed;
 
 window.setup = () => {
@@ -33,7 +39,7 @@ window.setup = () => {
 };
 
 function loadSaved() {
-    load(7665, 59198).then((data) => {
+    load(defaultSeed, defaultElevationUp, defaultElevationDown).then((data) => {
         background(0, 0, 100, 1);
         data.forEach((row, y) => {
             row.forEach((hex, x) => {
@@ -42,26 +48,37 @@ function loadSaved() {
         });
         hexes.forEach(row => row.forEach(hex => { hex.draw(); }));
     });
-    document.querySelector('#seed').value = 7665;
-    document.querySelector('#elevation').value = 59198;
-    document.querySelector('#elevation-input').value = 59198;
-};
+    document.querySelector('#seed').value = defaultSeed;
+    document.querySelector('#elevation-up').value = defaultElevationUp;
+    document.querySelector('#elevation-input-up').value = defaultElevationUp;
+    document.querySelector('#elevation-down').value = defaultElevationDown;
+    document.querySelector('#elevation-input-down').value = defaultElevationDown;
+}
 
 window.draw = () => {
     hexes.forEach(row => row.forEach(hex => { hex.reset(); }));
     background(0, 0, 100, 1);
-    let [x, y] = keyPoints[startKeyPoint];
-    for (let i = 0; i < globalElevation; i++) {
+    let [x, y] = keyPointsUp[startKeyPointUp];
+    for (let i = 0; i < globalElevationUp; i++) {
         x += randint(2) - 1;
         y += randint(2) - 1;
         if ((x >= columns - 2 || x < 1) || (y >= rows - 2 || y < 1)) {
-            [x, y] = random(keyPoints);
+            [x, y] = random(keyPointsUp);
         }
-        const h = hexes[y][x];
-        h.raise();
+        hexes[y][x].raise();
+    }
+    [x, y] = keyPointsDown[startKeyPointDown];
+    for (let i = 0; i < globalElevationDown; i++) {
+        x += randint(2) - 1;
+        y += randint(2) - 1;
+        if ((x >= columns - 2 || x < 1) || (y >= rows - 2 || y < 1)) {
+            [x, y] = random(keyPointsDown);
+        }
+        hexes[y][x].lower();
     }
     removeLakes();
-    calculatePrecipitation();
+    decimateIslands();
+    // calculatePrecipitation();
     hexes.forEach(row => row.forEach(hex => { hex.draw(); }));
 };
 
@@ -118,13 +135,14 @@ function calculatePrecipitation() {
 function setDefaults() {
     loadValues();
     initRandom();
-};
+}
 
 function initRandom() {
     randomSeed(seed);
     setKeyPoints();
-    startKeyPoint = Math.floor(random(keyPointsNum));
-};
+    startKeyPointUp = Math.floor(random(keyPointsUpNum));
+    startKeyPointDown = Math.floor(random(keyPointsDownNum));
+}
 
 function getHexNeighbours(hex) {
     let top = null;
@@ -182,7 +200,7 @@ function addToOcean(hex) {
                 neighbour.isOcean = false;
             }
         });
-};
+}
 
 function removeLakes() {
     if (hexes[0][0].isOcean === null) {
@@ -193,30 +211,58 @@ function removeLakes() {
             hex.setElevationTo(1);
         }
     }));
-};
+}
+
+function decimateIslands() {
+    hexes.forEach(row => row.forEach((hex) => {
+        if (getHexNeighbours(hex).filter(_ => _ !== null && _.elevation > 1).length < 3) {
+            hex.setElevationTo(0);
+        }
+    }));
+}
 
 function setKeyPoints() {
-    for (let i = 1; i <= keyPointsNum; i++) {
-        let x = Math.floor(randint(columns / 2)) + (columns / 2) * (i % 2);
-        let y = Math.floor(randint(rows / 2)) + (rows / 2) * (i % 2);
-        x = Math.min(columns - 2, Math.max(x, 1));
-        y = Math.min(rows - 2, Math.max(y, 1));
-        keyPoints.push([x, y]);
+    for (let i = 1; i <= keyPointsUpNum; i++) {
+        let { x, y } = getRandomPoint(i);
+        keyPointsUp.push([x, y]);
     }
-};
+    for (let i = 1; i <= keyPointsDownNum; i++) {
+        let { x, y } = getRandomPoint(i);
+        keyPointsDown.push([x, y]);
+    }
+}
+
+function getRandomPoint(i) {
+    let x = Math.floor(randint(columns / 2)) + (columns / 2) * (i % 2);
+    let y = Math.floor(randint(rows / 2)) + (rows / 2) * (i % 2);
+    x = Math.min(columns - 2, Math.max(x, 1));
+    y = Math.min(rows - 2, Math.max(y, 1));
+    return { x, y };
+}
 
 function loadValues() {
-    globalElevation = getStoredValue('hexgen-elevation', 15000);
-    document.querySelector('#elevation-input').value = globalElevation;
+    globalElevationUp = getStoredValue('hexgen-elevation-up', 15000);
+    globalElevationDown = getStoredValue('hexgen-elevation-down', 1500);
+    document.querySelector('#elevation-input-up').value = globalElevationUp;
+    document.querySelector('#elevation-input-down').value = globalElevationDown;
     seed = getStoredValue('hexgen-seed', randint(10000));
     document.querySelector('#seed').value = seed;
-};
+    // wind = getStoredValue('hexgen-wind', 0);
+}
 
 function setHandlers() {
-    document.querySelector('#elevation').addEventListener('input', (e) => {
-        globalElevation = e.target.value;
-        document.querySelector('#elevation-input').value = e.target.value;
-        localStorage.setItem('hexgen-elevation', e.target.value);
+    document.querySelector('#elevation-up').addEventListener('input', (e) => {
+        globalElevationUp = e.target.value;
+        document.querySelector('#elevation-input-up').value = e.target.value;
+        localStorage.setItem('hexgen-elevation-up', e.target.value);
+        initRandom();
+        redraw();
+    });
+
+    document.querySelector('#elevation-down').addEventListener('input', (e) => {
+        globalElevationDown = e.target.value;
+        document.querySelector('#elevation-input-down').value = e.target.value;
+        localStorage.setItem('hexgen-elevation-down', e.target.value);
         initRandom();
         redraw();
     });
@@ -236,9 +282,16 @@ function setHandlers() {
         redraw();
     });
 
-    document.querySelector('#elevation-input').addEventListener('change', (e) => {
-        localStorage.setItem('hexgen-elevation', e.target.value);
-        document.querySelector('#elevation').value = e.target.value;
+    document.querySelector('#elevation-input-up').addEventListener('change', (e) => {
+        localStorage.setItem('hexgen-elevation-up', e.target.value);
+        document.querySelector('#elevation-up').value = e.target.value;
+        setDefaults();
+        redraw();
+    });
+
+    document.querySelector('#elevation-input-down').addEventListener('change', (e) => {
+        localStorage.setItem('hexgen-elevation-down', e.target.value);
+        document.querySelector('#elevation-down').value = e.target.value;
         setDefaults();
         redraw();
     });
@@ -250,11 +303,17 @@ function setHandlers() {
     document.querySelector('#save').addEventListener('click', () => {
         save();
     });
-};
+
+    // document.querySelector('#wind').addEventListener('change', (e) => {
+    //     localStorage.setItem('hexgen-wind', e.target.value);
+    //     wind = e.target.value;
+    //     redraw();
+    // });
+}
 
 function randint(i) {
     return Math.floor(random(i + 1));
-};
+}
 
 function getStoredValue(key, defaultValue) {
     let v = localStorage.getItem(key);
@@ -263,12 +322,13 @@ function getStoredValue(key, defaultValue) {
         localStorage.setItem(key, defaultValue);
     }
     return v;
-};
+}
 
 function save() {
     const mapData = {
         seed,
-        elevation: globalElevation,
+        elevationUp: globalElevationUp,
+        elevationDown: globalElevationDown,
         data: hexes.map(row => row.map(hex => [hex.elevation])),
     };
     fetch('http://localhost:5000/save', {
@@ -280,8 +340,8 @@ function save() {
     });
 }
 
-async function load(seed, elevation) {
-    const response = await fetch(`/load/${seed}/${elevation}`);
+async function load(seed, elevationUp, elevationDown) {
+    const response = await fetch(`/load/${seed}/${elevationUp}/${elevationDown}`);
     const json = await response.json();
     return json;
 }

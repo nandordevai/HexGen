@@ -24,7 +24,7 @@
             position: absolute;
             top: 40px;
             right: 40px;
-            width: 250px;
+            width: 350px;
             z-index: 1;
         }
 
@@ -52,12 +52,13 @@
 
         label {
             text-align: right;
-            width: 60px;
+            width: 100px;
         }
 
         input[type=text] {
             font-size: 11px;
             height: 20px;
+            width: 70px;
         }
 
         button {
@@ -78,10 +79,26 @@
             <button class="row__item" id="regenerate-seed">Regenerate</button>
         </div>
         <div class="row">
-            <label class="row__item" for="elevation">Elevation</label>
-            <input class="row__item" type="range" name="elevation" id="elevation" min="20000" max="100000">
-            <input class="row__item" type="text" name="elevation-input" id="elevation-input" value="15000">
+            <label class="row__item" for="elevation-up">Elevation&nbsp;up</label>
+            <input class="row__item" type="range" name="elevation-up" id="elevation-up" min="20000" max="100000">
+            <input class="row__item" type="text" name="elevation-input-up" id="elevation-input-up" value="15000">
         </div>
+        <div class="row">
+            <label class="row__item" for="elevation-down">Elevation&nbsp;down</label>
+            <input class="row__item" type="range" name="elevation-down" id="elevation-down" min="2000" max="10000">
+            <input class="row__item" type="text" name="elevation-input-down" id="elevation-input-down" value="15000">
+        </div>
+        <!-- <div class="row">
+            <label class="row__item" for="wind">Wind</label>
+            <select name="wind" id="wind">
+                <option value="0">South</option>
+                <option value="1">Southwest</option>
+                <option value="2">Northwest</option>
+                <option value="3">North</option>
+                <option value="4">Northeast</option>
+                <option value="5">Southeast</option>
+            </select>
+        </div> -->
         <div class="row">
             <button class="row__item" id="load-default">Load default</button>
             <button class="row__item" id="save">Save</button>
