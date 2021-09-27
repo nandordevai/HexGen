@@ -1,8 +1,11 @@
 import codecs
+from io import BytesIO
 import json
+import base64
 
 from flask import Flask, request, Response, jsonify, render_template
 from flask_cors import CORS
+from PIL import Image
 
 app = Flask(__name__)
 CORS(app)
@@ -15,11 +18,16 @@ def static_file(path):
 
 @app.route('/save', methods=['POST'])
 def save():
+    filename = '{}-{}-{}'.format(request.json['seed'],
+                                 request.json['elevationUp'], request.json['elevationDown'])
     with codecs.open(
-        './maps/{}-{}-{}.hm'.format(request.json['seed'],
-                                    request.json['elevationUp'], request.json['elevationDown']),
+        './maps/{}.hm'.format(filename),
             'w', 'utf-8') as map_data:
         map_data.write(json.dumps(request.json['data']))
+    # data:image/png;base64,
+    image = Image.open(BytesIO(base64.b64decode(request.json['image'][22:])))
+    image.thumbnail((640, 360), resample=Image.LANCZOS)
+    image.save('./maps/{}.png'.format(filename))
     return Response(status=201)
 
 

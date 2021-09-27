@@ -215,6 +215,7 @@ function removeLakes() {
 
 function decimateIslands() {
     hexes.forEach(row => row.forEach((hex) => {
+        // if (getHexNeighbours(hex).filter(_ => _ !== null).every(_ => _.elevation < 1)) {
         if (getHexNeighbours(hex).filter(_ => _ !== null && _.elevation > 1).length < 3) {
             hex.setElevationTo(0);
         }
@@ -330,6 +331,7 @@ function save() {
         elevationUp: globalElevationUp,
         elevationDown: globalElevationDown,
         data: hexes.map(row => row.map(hex => [hex.elevation])),
+        image: document.querySelector('canvas').toDataURL('image/png'),
     };
     fetch('http://localhost:5000/save', {
         method: 'POST',
